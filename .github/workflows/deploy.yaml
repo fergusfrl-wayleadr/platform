@@ -1,7 +1,8 @@
-name: Deploy preview via SST to AWS
+name: Deploy via SST to AWS
 
 on:
-  pull_request:
+  workflow_dispatch:
+  push:
     branches:
       - main
 
