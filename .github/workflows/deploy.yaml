@@ -1,0 +1,61 @@
+name: Deploy via SST to AWS
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+env:
+  REF_NAME: production
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    # TODO: enable turbo repo caching.
+    # env:
+    #  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+    #  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules/
+          key: cache-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            cache-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Cache NextJS build
+        uses: actions/cache@v4
+        with:
+          path: |
+            .next/
+            .open-next/
+            .sst/
+          key: cache-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**.[jt]s', '**.[jt]xs') }}
+          restore-keys: |
+            cache-${{ hashFiles('**/pnpm-lock.yaml') }}-
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build
+        run: pnpm build
+
+      # TODO: enable testing.
+      # - name: Test
+      #   run: pnpm test
